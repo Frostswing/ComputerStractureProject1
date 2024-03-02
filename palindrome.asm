@@ -125,6 +125,19 @@ string_to_array:
 	
 get_length:
 	lb $t0, newline
+	addi $sp, $sp, -4    # Adjust stack 
+	sw $ra, 0($sp)       # Save the return address
+	addi $t2, $zero, 0     # counter = 0
+loop:
+	lb $t1, 0($a0)       # Load the byte at the current address
+	beq $t1, $t0, done   # If the byte is a newline, we are done
+	addi $a0, $a0, 4     # Move to the next byte
+	addi $t2, $t2, 1     # Increment the counter
+	j loop               # Repeat the loop
+done:
+	addi $v0, $t2, 0    # Calculate the length
+	lw $ra, 0($sp)      # Restore the return address
+	addi $sp, $sp, 4    # Restore the stack
 	jr $ra
 	
 is_pali_loop:
