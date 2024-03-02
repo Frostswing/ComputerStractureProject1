@@ -125,23 +125,54 @@ string_to_array:
 	
 get_length:
 	lb $t0, newline
-	addi $sp, $sp, -4    # Adjust stack 
-	sw $ra, 0($sp)       # Save the return address
+	addi $sp, $sp, -4    # adjust stack 
+	sw $ra, 0($sp)       # save the return address
 	addi $t2, $zero, 0     # counter = 0
 loop:
-	lb $t1, 0($a0)       # Load the byte at the current address
-	beq $t1, $t0, done   # If the byte is a newline, we are done
-	addi $a0, $a0, 4     # Move to the next byte
-	addi $t2, $t2, 1     # Increment the counter
-	j loop               # Repeat the loop
+	lb $t1, 0($a0)       # load the byte at the current address
+	beq $t1, $t0, done   # if the byte is a newline, we are done
+	addi $a0, $a0, 4     # move to the next byte
+	addi $t2, $t2, 1     # increment the counter
+	j loop               # repeat the loop
 done:
-	addi $v0, $t2, 0    # Calculate the length
-	lw $ra, 0($sp)      # Restore the return address
-	addi $sp, $sp, 4    # Restore the stack
+	addi $v0, $t2, 0    # calculate the length
+	lw $ra, 0($sp)      # restore the return address
+	addi $sp, $sp, 4    # restore the stack
 	jr $ra
 	
+
+
 is_pali_loop:
-	jr $ra
-	
+    addi $sp, $sp, -8        # Make space on stack for $ra
+    sw $ra, 4($sp)           # Save $ra on the stack
+    sll $t0, $a0, 2          # Convert length to byte offset ($a0 * 4)
+    add $t0, $t0, $a1        # $t0 = address of the last character in the string
+    addi $t0, $t0, -4        # Adjust $t0 to point to the last character (not past it)
+    add $t1, $a1, $zero      # $t1 = address of the first character
+    li $v0, 1                # Initially assume the string is a palindrome
+
+loop_start:
+    blt $t1, $t0, check_char # Continue loop if start pointer < end pointer
+    j loop_end               # If pointers have met or crossed, end loop
+
+check_char:
+    lw $t2, 0($t1)           # Load word from start pointer
+    lw $t3, 0($t0)           # Load word from end pointer
+    bne $t2, $t3, not_pali   # If words are not equal, it's not a palindrome
+    addi $t1, $t1, 4         # Increment start pointer by 4 bytes
+    addi $t0, $t0, -4        # Decrement end pointer by 4 bytes
+    j loop_start             # Jump back to the start of the loop
+
+not_pali:
+    li $v0, 0                # Set $v0 to 0 to indicate not a palindrome
+    j loop_end               # Skip to the end
+
+loop_end:
+    lw $ra, 4($sp)           # Restore $ra from the stack
+    addi $sp, $sp, 8         # Clean up the stack
+    jr $ra                   # Return to caller
+
+
 is_pali_recursive:
+
 	jr $ra
